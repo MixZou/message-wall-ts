@@ -2,7 +2,16 @@
   <div class="container">
     <h1>Mssage Wall</h1>
     <Search @submitSearch="submitSearch" @resetList="resetList"></Search>
-    <CreateMessage v-if="isEdit" @closeEdit="closeEdit" @submitMessage="submitMessage"></CreateMessage>
+    <SelectPages
+      @selectedPage="selectedPage"
+      @selectedLimit="selectedLimit"
+      :page-count="pagesCount"
+    ></SelectPages>
+    <CreateMessage
+      v-if="isEdit"
+      @closeEdit="closeEdit"
+      @submitMessage="submitMessage"
+    ></CreateMessage>
     <Message
       v-for="item in posts"
       :key="item.post_id"
@@ -21,13 +30,34 @@ import Message from "../components/Message.vue";
 import { MessageInterface } from "../interface/MessageInterface";
 import { getMessageList, getSearchMessage } from "../api";
 import Search from "../components/Search.vue";
-import {reactive, onBeforeMount, onMounted, onBeforeUpdate, ref} from "vue";
+import { reactive, onBeforeMount, onMounted, onBeforeUpdate, ref } from "vue";
 import { AxiosResponse } from "axios";
 import Publish from "../components/Publish.vue";
-import CreateMessage from "../components/createMessage.vue";
+import CreateMessage from "../components/CeateMessage.vue";
+import SelectPages from "../components/SelectPages.vue";
 
 const posts = reactive<MessageInterface>([]);
-const isEdit = ref<boolean>(false)
+const isEdit = ref<boolean>(false);
+
+const currentLimit = ref<number>(5);
+const pagesCount = ref<number>(1);
+const currentPage = ref<number>(1);
+
+onBeforeMount(() => {
+  initPage();
+  getPosts();
+});
+
+const initPage = async () => {
+  await getMessageList()
+    .then((res: AxiosResponse) => {
+      let amount: number = res.data.amount;
+      pagesCount.value = Math.ceil(amount / currentLimit.value);
+    })
+    .catch((error: Error) => {
+      console.log(`Init Pages Error: ${error}`);
+    });
+};
 
 const getPosts = async () => {
   let tmp: MessageInterface = [];
@@ -43,25 +73,49 @@ const getPosts = async () => {
     });
 };
 
-onBeforeMount(() => {
-  getPosts();
-});
+const getPostsByPL = async (page: number, limit: number) => {
+  let tmp: MessageInterface = [];
+  await getMessageList({ page, limit })
+    .then((res: AxiosResponse) => {
+      tmp = res.data.results;
+      posts.splice(0, posts.length + 1);
+      for (let i = 0; i < tmp.length; i++) {
+        posts[i] = tmp[i];
+      }
+    })
+    .catch((error: Error) => {
+      console.log(`getList Error: ${error}`);
+    });
+};
+
+const selectedPage = (slectedP: number) => {
+  currentPage.value = slectedP;
+  getPostsByPL(currentPage.value, currentLimit.value);
+};
+
+const selectedLimit = (slectL: number) => {
+  initPage();
+  currentLimit.value = slectL;
+  currentPage.value = 1;
+  getPostsByPL(currentPage.value, currentLimit.value);
+};
 
 const confirmEdit = async (refresh: boolean) => {
   if (refresh === true) {
-    await getPosts();
+    await getPostsByPL(currentPage.value, currentLimit.value);
   }
 };
 
 const confirmDelete = async (refresh: boolean) => {
   if (refresh === true) {
-    await getPosts();
+    currentPage.value = 1;
+    await getPostsByPL(currentPage.value, currentLimit.value);
   }
 };
 
-const resetList = (keywords:string)=>{
-  submitSearch(keywords)
-}
+const resetList = (keywords: string) => {
+  submitSearch(keywords);
+};
 
 const submitSearch = async (keywords: string) => {
   if (keywords === "") {
@@ -75,23 +129,27 @@ const submitSearch = async (keywords: string) => {
         for (let i = 0; i < tmp.length; i++) {
           posts[i] = tmp[i];
         }
-        console.log(posts);
+        pagesCount.value = Math.ceil(posts.length / currentLimit.value);
       })
       .catch((error: Error) => {
         console.log(`Search Error: ${error}`);
       });
   }
 };
-const toCreateMessage = ()=>{
-  isEdit.value = true
-}
-const closeEdit = ()=>{
-  isEdit.value = false
-}
-const submitMessage = ()=>{
-  isEdit.value = false
-  getPosts()
-}
+
+const toCreateMessage = () => {
+  isEdit.value = true;
+};
+
+const closeEdit = () => {
+  isEdit.value = false;
+};
+
+const submitMessage = () => {
+  isEdit.value = false;
+  currentPage.value = 1;
+  getPostsByPL(currentPage.value, currentLimit.value);
+};
 </script>
 
 <style scoped>

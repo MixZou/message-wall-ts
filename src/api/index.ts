@@ -2,8 +2,8 @@ import request from "./request";
 import {EditMessage} from "../interface/MessageInterface";
 
 
-export function getMessageList() {
-  return request.get("/posts", {});
+export function getMessageList({page=1,limit=10}={}) {
+  return request.get("/posts", {params:{page,limit}});
 }
 
 export function createMessage(body: EditMessage) {

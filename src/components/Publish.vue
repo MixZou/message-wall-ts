@@ -2,13 +2,14 @@
   <button class="publish" @click="publishMessage">Publish</button>
 </template>
 
-<script setup lang='ts'>
-import {defineEmits} from 'vue'
-const emit = defineEmits(['toCreateMessage'])
+<script setup lang="ts">
+import { defineEmits } from "vue";
 
-const publishMessage = ()=>{
-  emit('toCreateMessage')
-}
+const emit = defineEmits(["toCreateMessage"]);
+
+const publishMessage = () => {
+  emit("toCreateMessage");
+};
 </script>
 
 <style scoped>

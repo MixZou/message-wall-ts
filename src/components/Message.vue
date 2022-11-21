@@ -3,7 +3,6 @@
     <div class="edit-container" v-if="isEdit">
       <textarea
         class="edit-content"
-
         placeholder="Edit Your Message"
         v-model="editContent"
       />
@@ -29,8 +28,11 @@
 import moment from "moment";
 import { ref } from "vue";
 import { deleteMessage, updateMessage } from "../api";
+
 moment.locale("zh-cn");
+
 const props = defineProps(["time", "id", "content"]);
+const emit = defineEmits(["test", "confirmEdit", "confirmDelete"]);
 
 const isEdit = ref<boolean>(false);
 const refresh = ref<boolean>(false);
@@ -40,30 +42,29 @@ const change = () => {
   isEdit.value = !isEdit.value;
   editContent.value = "";
 };
-const emit = defineEmits(["test", "confirmEdit", "confirmDelete"]);
 
 const confirmEditMessage = async () => {
   if (editContent.value != "") {
     await updateMessage(props.id, { content: editContent.value.toString() })
       .then()
       .catch((error: Error) => {
-        console.log(`update error: ${error}`);
+        console.log(`Update Error: ${error}`);
       });
-    change()
+    change();
   }
   refresh.value = true;
   emit("confirmEdit", refresh.value);
 };
 
-const confirmDelete = async ()=>{
+const confirmDelete = async () => {
   await deleteMessage(props.id)
-      .then()
-      .catch((error:Error)=>{
-        console.log(error)
-      });
+    .then()
+    .catch((error: Error) => {
+      console.log(`Delete Error ${error}`);
+    });
   refresh.value = true;
-  emit('confirmDelete', refresh.value)
-}
+  emit("confirmDelete", refresh.value);
+};
 </script>
 
 <style scoped>
