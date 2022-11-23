@@ -25,7 +25,7 @@ import { ref } from "vue";
 const props = defineProps(["pageCount"]);
 const emit = defineEmits(['selectedPage','selectedLimit'])
 
-const currentLimit = ref<number>(5);
+const currentLimit = ref<number>(10);
 const currentPage = ref<number>(1);
 
 const submitPage = ()=>{

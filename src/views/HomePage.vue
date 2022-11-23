@@ -39,7 +39,7 @@ import SelectPages from "../components/SelectPages.vue";
 const posts = reactive<MessageInterface>([]);
 const isEdit = ref<boolean>(false);
 
-const currentLimit = ref<number>(5);
+const currentLimit = ref<number>(10);
 const pagesCount = ref<number>(1);
 const currentPage = ref<number>(1);
 
